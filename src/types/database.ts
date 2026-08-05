@@ -229,6 +229,142 @@ export type Database = {
           },
         ]
       }
+      requests: {
+        Row: {
+          client_id: string
+          completed_at: string | null
+          created_at: string
+          created_by: string
+          due_at: string | null
+          id: string
+          organization_id: string
+          original_message: string
+          priority: Database["public"]["Enums"]["request_priority"]
+          project_id: string | null
+          source: Database["public"]["Enums"]["request_source"]
+          status: Database["public"]["Enums"]["request_status"]
+          summary: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          completed_at?: string | null
+          created_at?: string
+          created_by: string
+          due_at?: string | null
+          id?: string
+          organization_id: string
+          original_message: string
+          priority?: Database["public"]["Enums"]["request_priority"]
+          project_id?: string | null
+          source?: Database["public"]["Enums"]["request_source"]
+          status?: Database["public"]["Enums"]["request_status"]
+          summary?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string
+          due_at?: string | null
+          id?: string
+          organization_id?: string
+          original_message?: string
+          priority?: Database["public"]["Enums"]["request_priority"]
+          project_id?: string | null
+          source?: Database["public"]["Enums"]["request_source"]
+          status?: Database["public"]["Enums"]["request_status"]
+          summary?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "requests_client_same_organization"
+            columns: ["client_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "requests_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "requests_project_client_same_organization"
+            columns: ["project_id", "client_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id", "client_id", "organization_id"]
+          },
+        ]
+      }
+      tasks: {
+        Row: {
+          assignee_id: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          due_at: string | null
+          id: string
+          organization_id: string
+          priority: Database["public"]["Enums"]["request_priority"]
+          request_id: string
+          status: Database["public"]["Enums"]["task_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assignee_id?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          due_at?: string | null
+          id?: string
+          organization_id: string
+          priority?: Database["public"]["Enums"]["request_priority"]
+          request_id: string
+          status?: Database["public"]["Enums"]["task_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assignee_id?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          due_at?: string | null
+          id?: string
+          organization_id?: string
+          priority?: Database["public"]["Enums"]["request_priority"]
+          request_id?: string
+          status?: Database["public"]["Enums"]["task_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_request_same_organization"
+            columns: ["request_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "requests"
+            referencedColumns: ["id", "organization_id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -254,6 +390,16 @@ export type Database = {
       client_status: "active" | "inactive" | "archived"
       organization_role: "owner" | "admin" | "member"
       project_status: "active" | "on_hold" | "completed" | "archived"
+      request_priority: "low" | "normal" | "high" | "urgent"
+      request_source: "manual" | "email" | "whatsapp" | "portal" | "other"
+      request_status:
+        | "received"
+        | "ai_review"
+        | "in_progress"
+        | "waiting_client"
+        | "completed"
+        | "cancelled"
+      task_status: "todo" | "in_progress" | "blocked" | "done" | "cancelled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -387,6 +533,17 @@ export const Constants = {
       client_status: ["active", "inactive", "archived"],
       organization_role: ["owner", "admin", "member"],
       project_status: ["active", "on_hold", "completed", "archived"],
+      request_priority: ["low", "normal", "high", "urgent"],
+      request_source: ["manual", "email", "whatsapp", "portal", "other"],
+      request_status: [
+        "received",
+        "ai_review",
+        "in_progress",
+        "waiting_client",
+        "completed",
+        "cancelled",
+      ],
+      task_status: ["todo", "in_progress", "blocked", "done", "cancelled"],
     },
   },
 } as const
