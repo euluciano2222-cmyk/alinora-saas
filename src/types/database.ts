@@ -174,6 +174,149 @@ export type Database = {
           },
         ]
       }
+      attachments: {
+        Row: {
+          client_id: string
+          created_at: string
+          file_name: string
+          file_size_bytes: number
+          id: string
+          is_internal: boolean
+          message_id: string | null
+          mime_type: string
+          organization_id: string
+          request_id: string
+          storage_bucket: string
+          storage_path: string
+          uploaded_by: string
+          uploaded_by_client_access_id: string | null
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          file_name: string
+          file_size_bytes: number
+          id?: string
+          is_internal?: boolean
+          message_id?: string | null
+          mime_type: string
+          organization_id: string
+          request_id: string
+          storage_bucket?: string
+          storage_path: string
+          uploaded_by: string
+          uploaded_by_client_access_id?: string | null
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          file_name?: string
+          file_size_bytes?: number
+          id?: string
+          is_internal?: boolean
+          message_id?: string | null
+          mime_type?: string
+          organization_id?: string
+          request_id?: string
+          storage_bucket?: string
+          storage_path?: string
+          uploaded_by?: string
+          uploaded_by_client_access_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attachments_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "request_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attachments_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attachments_request_same_client_organization"
+            columns: ["request_id", "client_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "requests"
+            referencedColumns: ["id", "client_id", "organization_id"]
+          },
+          {
+            foreignKeyName: "attachments_uploaded_by_client_access_id_fkey"
+            columns: ["uploaded_by_client_access_id"]
+            isOneToOne: false
+            referencedRelation: "client_access"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_access: {
+        Row: {
+          accepted_at: string | null
+          client_id: string
+          created_at: string
+          email: string
+          id: string
+          invited_at: string
+          invited_by: string
+          organization_id: string
+          revoked_at: string | null
+          role: Database["public"]["Enums"]["client_access_role"]
+          status: Database["public"]["Enums"]["client_access_status"]
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          client_id: string
+          created_at?: string
+          email: string
+          id?: string
+          invited_at?: string
+          invited_by: string
+          organization_id: string
+          revoked_at?: string | null
+          role?: Database["public"]["Enums"]["client_access_role"]
+          status?: Database["public"]["Enums"]["client_access_status"]
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          client_id?: string
+          created_at?: string
+          email?: string
+          id?: string
+          invited_at?: string
+          invited_by?: string
+          organization_id?: string
+          revoked_at?: string | null
+          role?: Database["public"]["Enums"]["client_access_role"]
+          status?: Database["public"]["Enums"]["client_access_status"]
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_access_client_same_organization"
+            columns: ["client_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "client_access_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clients: {
         Row: {
           company_name: string | null
@@ -366,6 +509,7 @@ export type Database = {
       }
       request_messages: {
         Row: {
+          author_client_access_id: string | null
           author_client_id: string | null
           author_user_id: string | null
           body: string
@@ -377,6 +521,7 @@ export type Database = {
           sender_type: Database["public"]["Enums"]["message_sender_type"]
         }
         Insert: {
+          author_client_access_id?: string | null
           author_client_id?: string | null
           author_user_id?: string | null
           body: string
@@ -388,6 +533,7 @@ export type Database = {
           sender_type: Database["public"]["Enums"]["message_sender_type"]
         }
         Update: {
+          author_client_access_id?: string | null
           author_client_id?: string | null
           author_user_id?: string | null
           body?: string
@@ -399,6 +545,13 @@ export type Database = {
           sender_type?: Database["public"]["Enums"]["message_sender_type"]
         }
         Relationships: [
+          {
+            foreignKeyName: "request_messages_author_client_access_id_fkey"
+            columns: ["author_client_access_id"]
+            isOneToOne: false
+            referencedRelation: "client_access"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "request_messages_client_matches_request"
             columns: ["request_id", "author_client_id", "organization_id"]
@@ -563,6 +716,46 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      activate_client_access: {
+        Args: { access_id: string }
+        Returns: {
+          accepted_at: string | null
+          client_id: string
+          created_at: string
+          email: string
+          id: string
+          invited_at: string
+          invited_by: string
+          organization_id: string
+          revoked_at: string | null
+          role: Database["public"]["Enums"]["client_access_role"]
+          status: Database["public"]["Enums"]["client_access_status"]
+          updated_at: string
+          user_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "client_access"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      has_client_access: {
+        Args: { target_client_id: string; target_organization_id: string }
+        Returns: boolean
+      }
+      has_client_access_role: {
+        Args: {
+          allowed_roles: Database["public"]["Enums"]["client_access_role"][]
+          target_client_id: string
+          target_organization_id: string
+        }
+        Returns: boolean
+      }
+      has_organization_client_access: {
+        Args: { target_organization_id: string }
+        Returns: boolean
+      }
       has_organization_role: {
         Args: {
           allowed_roles: Database["public"]["Enums"]["organization_role"][]
@@ -586,6 +779,8 @@ export type Database = {
         | "approved"
         | "changes_requested"
         | "cancelled"
+      client_access_role: "viewer" | "approver"
+      client_access_status: "invited" | "active" | "revoked"
       client_status: "active" | "inactive" | "archived"
       message_sender_type: "team" | "client" | "system"
       organization_role: "owner" | "admin" | "member"
@@ -737,6 +932,8 @@ export const Constants = {
         "changes_requested",
         "cancelled",
       ],
+      client_access_role: ["viewer", "approver"],
+      client_access_status: ["invited", "active", "revoked"],
       client_status: ["active", "inactive", "archived"],
       message_sender_type: ["team", "client", "system"],
       organization_role: ["owner", "admin", "member"],
