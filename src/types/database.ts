@@ -39,6 +39,141 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_reviews: {
+        Row: {
+          confidence: number | null
+          created_at: string
+          id: string
+          model_name: string | null
+          organization_id: string
+          request_id: string
+          requested_by: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: Database["public"]["Enums"]["ai_review_status"]
+          suggested_due_at: string | null
+          suggested_priority:
+            | Database["public"]["Enums"]["request_priority"]
+            | null
+          suggested_summary: string | null
+          suggested_tasks: Json
+          updated_at: string
+        }
+        Insert: {
+          confidence?: number | null
+          created_at?: string
+          id?: string
+          model_name?: string | null
+          organization_id: string
+          request_id: string
+          requested_by: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["ai_review_status"]
+          suggested_due_at?: string | null
+          suggested_priority?:
+            | Database["public"]["Enums"]["request_priority"]
+            | null
+          suggested_summary?: string | null
+          suggested_tasks?: Json
+          updated_at?: string
+        }
+        Update: {
+          confidence?: number | null
+          created_at?: string
+          id?: string
+          model_name?: string | null
+          organization_id?: string
+          request_id?: string
+          requested_by?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["ai_review_status"]
+          suggested_due_at?: string | null
+          suggested_priority?:
+            | Database["public"]["Enums"]["request_priority"]
+            | null
+          suggested_summary?: string | null
+          suggested_tasks?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_reviews_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_reviews_request_same_organization"
+            columns: ["request_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "requests"
+            referencedColumns: ["id", "organization_id"]
+          },
+        ]
+      }
+      approvals: {
+        Row: {
+          client_id: string
+          created_at: string
+          id: string
+          message: string | null
+          organization_id: string
+          request_id: string
+          requested_at: string
+          requested_by: string
+          responded_at: string | null
+          response_note: string | null
+          status: Database["public"]["Enums"]["approval_status"]
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          id?: string
+          message?: string | null
+          organization_id: string
+          request_id: string
+          requested_at?: string
+          requested_by: string
+          responded_at?: string | null
+          response_note?: string | null
+          status?: Database["public"]["Enums"]["approval_status"]
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          id?: string
+          message?: string | null
+          organization_id?: string
+          request_id?: string
+          requested_at?: string
+          requested_by?: string
+          responded_at?: string | null
+          response_note?: string | null
+          status?: Database["public"]["Enums"]["approval_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approvals_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approvals_request_client_same_organization"
+            columns: ["request_id", "client_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "requests"
+            referencedColumns: ["id", "client_id", "organization_id"]
+          },
+        ]
+      }
       clients: {
         Row: {
           company_name: string | null
@@ -229,6 +364,64 @@ export type Database = {
           },
         ]
       }
+      request_messages: {
+        Row: {
+          author_client_id: string | null
+          author_user_id: string | null
+          body: string
+          created_at: string
+          id: string
+          is_internal: boolean
+          organization_id: string
+          request_id: string
+          sender_type: Database["public"]["Enums"]["message_sender_type"]
+        }
+        Insert: {
+          author_client_id?: string | null
+          author_user_id?: string | null
+          body: string
+          created_at?: string
+          id?: string
+          is_internal?: boolean
+          organization_id: string
+          request_id: string
+          sender_type: Database["public"]["Enums"]["message_sender_type"]
+        }
+        Update: {
+          author_client_id?: string | null
+          author_user_id?: string | null
+          body?: string
+          created_at?: string
+          id?: string
+          is_internal?: boolean
+          organization_id?: string
+          request_id?: string
+          sender_type?: Database["public"]["Enums"]["message_sender_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "request_messages_client_matches_request"
+            columns: ["request_id", "author_client_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "requests"
+            referencedColumns: ["id", "client_id", "organization_id"]
+          },
+          {
+            foreignKeyName: "request_messages_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "request_messages_request_same_organization"
+            columns: ["request_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "requests"
+            referencedColumns: ["id", "organization_id"]
+          },
+        ]
+      }
       requests: {
         Row: {
           client_id: string
@@ -387,7 +580,14 @@ export type Database = {
       }
     }
     Enums: {
+      ai_review_status: "pending" | "approved" | "edited" | "rejected"
+      approval_status:
+        | "pending"
+        | "approved"
+        | "changes_requested"
+        | "cancelled"
       client_status: "active" | "inactive" | "archived"
+      message_sender_type: "team" | "client" | "system"
       organization_role: "owner" | "admin" | "member"
       project_status: "active" | "on_hold" | "completed" | "archived"
       request_priority: "low" | "normal" | "high" | "urgent"
@@ -530,7 +730,15 @@ export const Constants = {
   },
   public: {
     Enums: {
+      ai_review_status: ["pending", "approved", "edited", "rejected"],
+      approval_status: [
+        "pending",
+        "approved",
+        "changes_requested",
+        "cancelled",
+      ],
       client_status: ["active", "inactive", "archived"],
+      message_sender_type: ["team", "client", "system"],
       organization_role: ["owner", "admin", "member"],
       project_status: ["active", "on_hold", "completed", "archived"],
       request_priority: ["low", "normal", "high", "urgent"],
