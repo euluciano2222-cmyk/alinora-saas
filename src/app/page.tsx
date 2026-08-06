@@ -1,3 +1,5 @@
+import { HumanHero } from "@/components/HumanHero/HumanHero";
+
 const projects = [
   {
     code: "PRJ-024",
@@ -49,6 +51,46 @@ const capabilities = [
   },
 ];
 
+const statistics = [
+  {
+    value: "14",
+    label: "Clientes ativos",
+  },
+  {
+    value: "32",
+    label: "Projetos concluídos",
+  },
+  {
+    value: "126",
+    label: "Arquivos entregues",
+  },
+  {
+    value: "4,9",
+    label: "Avaliação média",
+  },
+];
+
+const processSteps = [
+  {
+    number: "01",
+    title: "Configure seu espaço",
+    description:
+      "Crie sua conta e informe os dados essenciais do seu negócio.",
+  },
+  {
+    number: "02",
+    title: "Cadastre o trabalho",
+    description:
+      "Adicione clientes, projetos, prazos e responsáveis por cada etapa.",
+  },
+  {
+    number: "03",
+    title: "Acompanhe e entregue",
+    description:
+      "Monitore o andamento e compartilhe os arquivos com segurança.",
+  },
+];
+
 export default function Home() {
   return (
     <main className="min-h-screen bg-cream text-ink">
@@ -75,15 +117,24 @@ export default function Home() {
           </a>
 
           <div className="hidden items-center gap-8 border-l border-ink/20 pl-10 text-sm md:flex">
-            <a href="#produto" className="transition-colors hover:text-primary">
+            <a
+              href="#produto"
+              className="transition-colors hover:text-primary"
+            >
               Produto
             </a>
 
-            <a href="#recursos" className="transition-colors hover:text-primary">
+            <a
+              href="#recursos"
+              className="transition-colors hover:text-primary"
+            >
               Recursos
             </a>
 
-            <a href="#processo" className="transition-colors hover:text-primary">
+            <a
+              href="#processo"
+              className="transition-colors hover:text-primary"
+            >
               Como funciona
             </a>
           </div>
@@ -106,102 +157,27 @@ export default function Home() {
         </nav>
       </header>
 
-      <section id="produto" className="border-b border-ink/20">
-        <div className="mx-auto grid max-w-[1440px] lg:grid-cols-[1.15fr_0.85fr]">
-          <div className="px-5 py-20 md:px-10 md:py-28 lg:border-r lg:border-ink/20 lg:py-36">
-            <div className="flex items-center gap-4 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-              <span className="h-px w-10 bg-primary" />
-              Sistema de gestão para freelancers
-            </div>
-
-            <h1 className="mt-9 max-w-4xl text-[clamp(3.25rem,7vw,7.5rem)] font-semibold leading-[0.89] tracking-[-0.075em]">
-              Trabalho criativo exige organização.
-            </h1>
-
-            <div className="mt-12 grid gap-8 border-t border-ink/20 pt-7 sm:grid-cols-[1fr_auto] sm:items-end">
-              <p className="max-w-xl text-lg leading-8 text-muted">
-                A Alinora reúne clientes, projetos, prazos e arquivos em uma
-                operação clara, criada para quem trabalha por conta própria.
-              </p>
-
-              <a
-                href="/login"
-                className="flex min-h-14 items-center justify-between gap-8 border border-primary bg-cream px-6 font-medium text-ink transition-colors hover:bg-primary hover:text-white active:bg-primary-dark active:text-white"
-              >
-                Começar agora
-                <span aria-hidden="true">↗</span>
-              </a>
-            </div>
-          </div>
-
-          <aside className="flex flex-col bg-primary text-white">
-            <div className="border-b border-white/25 px-6 py-5 text-xs uppercase tracking-[0.18em] md:px-8">
-              Panorama da operação
-            </div>
-
-            <div className="grid flex-1 grid-cols-2">
-              <div className="border-b border-r border-white/25 p-6 md:p-8">
-                <p className="text-xs uppercase tracking-[0.15em] text-white/60">
-                  Projetos ativos
-                </p>
-
-                <strong className="mt-12 block text-6xl font-medium tracking-[-0.06em]">
-                  08
-                </strong>
-              </div>
-
-              <div className="border-b border-white/25 p-6 md:p-8">
-                <p className="text-xs uppercase tracking-[0.15em] text-white/60">
-                  Em revisão
-                </p>
-
-                <strong className="mt-12 block text-6xl font-medium tracking-[-0.06em]">
-                  03
-                </strong>
-              </div>
-
-              <div className="col-span-2 p-6 md:p-8">
-                <div className="flex items-center justify-between text-xs uppercase tracking-[0.15em]">
-                  <span className="text-white/60">Entregas no prazo</span>
-                  <span>92%</span>
-                </div>
-
-                <div className="mt-5 h-2 border border-white/40">
-                  <div className="h-full w-[92%] bg-white" />
-                </div>
-
-                <p className="mt-10 max-w-sm text-xl leading-8 text-white/85">
-                  Controle suficiente para antecipar problemas sem transformar
-                  sua rotina em burocracia.
-                </p>
-              </div>
-            </div>
-          </aside>
-        </div>
-      </section>
+      <HumanHero />
 
       <section className="border-b border-white/25 bg-primary text-white">
         <div className="mx-auto grid max-w-[1440px] grid-cols-2 md:grid-cols-4">
-          {[
-            ["14", "Clientes ativos"],
-            ["32", "Projetos concluídos"],
-            ["126", "Arquivos entregues"],
-            ["4,9", "Avaliação média"],
-          ].map(([value, label], index) => (
+          {statistics.map((statistic, index) => (
             <div
-              key={label}
+              key={statistic.label}
               className={`px-5 py-8 md:px-10 md:py-10 ${
-                index !== 3 ? "border-r border-white/25" : ""
+                index !== statistics.length - 1
+                  ? "border-r border-white/25"
+                  : ""
               } ${index === 1 ? "max-md:border-r-0" : ""} ${
                 index < 2 ? "max-md:border-b max-md:border-white/25" : ""
               }`}
             >
               <p className="text-3xl font-semibold tracking-[-0.05em] text-white md:text-4xl">
-                {value}
+                {statistic.value}
               </p>
 
               <p className="mt-2 text-xs uppercase tracking-[0.14em] text-white/75">
-                {label}
+                {statistic.label}
               </p>
             </div>
           ))}
@@ -225,24 +201,24 @@ export default function Home() {
           </div>
 
           <div className="grid md:grid-cols-2">
-            {capabilities.map((item, index) => (
+            {capabilities.map((capability, index) => (
               <article
-                key={item.number}
-                className={`min-h-72 border-ink/20 p-5 md:p-10 ${
+                key={capability.number}
+                className={`min-h-72 border-ink/20 p-5 transition-colors duration-300 hover:bg-primary hover:text-white md:p-10 ${
                   index % 2 === 0 ? "md:border-r" : ""
                 } ${index < 2 ? "border-b" : ""}`}
               >
-                <span className="font-mono text-xs text-primary">
-                  {item.number}
+                <span className="font-mono text-xs text-primary transition-colors group-hover:text-white">
+                  {capability.number}
                 </span>
 
                 <div className="mt-20 grid gap-4 xl:grid-cols-[0.85fr_1.15fr]">
                   <h3 className="text-2xl font-semibold tracking-[-0.035em]">
-                    {item.title}
+                    {capability.title}
                   </h3>
 
-                  <p className="max-w-md leading-7 text-muted">
-                    {item.description}
+                  <p className="max-w-md leading-7 text-muted transition-colors hover:text-white/75">
+                    {capability.description}
                   </p>
                 </div>
               </article>
@@ -283,13 +259,15 @@ export default function Home() {
               {projects.map((project) => (
                 <div
                   key={project.code}
-                  className="grid grid-cols-[0.7fr_1.7fr_1.2fr_0.8fr_0.8fr] items-center border-b border-white/20 py-6 text-sm"
+                  className="grid grid-cols-[0.7fr_1.7fr_1.2fr_0.8fr_0.8fr] items-center border-b border-white/20 py-6 text-sm transition-all duration-300 hover:bg-white/10 hover:px-4"
                 >
                   <span className="font-mono text-xs text-white/75">
                     {project.code}
                   </span>
 
-                  <span className="font-medium text-white">{project.name}</span>
+                  <span className="font-medium text-white">
+                    {project.name}
+                  </span>
 
                   <span className="text-white/75">{project.client}</span>
 
@@ -320,35 +298,23 @@ export default function Home() {
           </div>
 
           <div>
-            {[
-              [
-                "01",
-                "Configure seu espaço",
-                "Crie sua conta e informe os dados essenciais do seu negócio.",
-              ],
-              [
-                "02",
-                "Cadastre o trabalho",
-                "Adicione clientes, projetos, prazos e responsáveis por cada etapa.",
-              ],
-              [
-                "03",
-                "Acompanhe e entregue",
-                "Monitore o andamento e compartilhe os arquivos com segurança.",
-              ],
-            ].map(([number, title, description]) => (
-              <div
-                key={number}
-                className="grid gap-6 border-b border-ink/20 px-5 py-9 last:border-b-0 md:grid-cols-[80px_0.8fr_1.2fr] md:px-10"
+            {processSteps.map((step) => (
+              <article
+                key={step.number}
+                className="grid gap-6 border-b border-ink/20 px-5 py-9 transition-colors duration-300 last:border-b-0 hover:bg-primary hover:text-white md:grid-cols-[80px_0.8fr_1.2fr] md:px-10"
               >
-                <span className="font-mono text-xs text-primary">{number}</span>
+                <span className="font-mono text-xs text-primary">
+                  {step.number}
+                </span>
 
                 <h3 className="text-xl font-semibold tracking-[-0.03em]">
-                  {title}
+                  {step.title}
                 </h3>
 
-                <p className="max-w-md leading-7 text-muted">{description}</p>
-              </div>
+                <p className="max-w-md leading-7 text-muted">
+                  {step.description}
+                </p>
+              </article>
             ))}
           </div>
         </div>
@@ -374,7 +340,7 @@ export default function Home() {
 
             <a
               href="/login"
-              className="mt-14 flex min-h-14 items-center justify-between border border-ink bg-ink px-6 font-medium text-white transition-colors duration-200 hover:border-white hover:bg-white hover:text-primary active:bg-primary-light active:text-primary"
+              className="mt-14 flex min-h-14 items-center justify-between border border-ink bg-ink px-6 font-medium text-white transition-colors duration-200 hover:border-white hover:bg-white hover:text-primary"
             >
               Criar conta gratuita
               <span aria-hidden="true">↗</span>
