@@ -1,3 +1,4 @@
+import { CapabilitiesShowcase } from "@/components/CapabilitiesShowcase/CapabilitiesShowcase";
 import { HumanHero } from "@/components/HumanHero/HumanHero";
 
 const projects = [
@@ -24,70 +25,43 @@ const projects = [
   },
 ];
 
-const capabilities = [
-  {
-    number: "01",
-    title: "Gestão de clientes",
-    description:
-      "Informações, contatos e histórico de trabalho reunidos em um cadastro objetivo.",
-  },
-  {
-    number: "02",
-    title: "Controle de projetos",
-    description:
-      "Etapas, prazos e prioridades visíveis para você saber exatamente o que fazer.",
-  },
-  {
-    number: "03",
-    title: "Entrega de arquivos",
-    description:
-      "Um ambiente protegido para organizar materiais e compartilhar cada entrega.",
-  },
-  {
-    number: "04",
-    title: "Acesso do cliente",
-    description:
-      "Cada cliente visualiza apenas os projetos e arquivos autorizados para ele.",
-  },
-];
-
 const statistics = [
   {
-    value: "14",
-    label: "Clientes ativos",
+    value: "VISÃO",
+    label: "Decisões com contexto",
   },
   {
-    value: "32",
-    label: "Projetos concluídos",
+    value: "RITMO",
+    label: "Projetos em movimento",
   },
   {
-    value: "126",
-    label: "Arquivos entregues",
+    value: "VALOR",
+    label: "Clientes mais seguros",
   },
   {
-    value: "4,9",
-    label: "Avaliação média",
+    value: "ESCALA",
+    label: "Estrutura para crescer",
   },
 ];
 
 const processSteps = [
   {
     number: "01",
-    title: "Configure seu espaço",
+    title: "Reúna o contexto",
     description:
-      "Crie sua conta e informe os dados essenciais do seu negócio.",
+      "Centralize clientes, conversas, projetos e decisões antes que informações importantes se percam.",
   },
   {
     number: "02",
-    title: "Cadastre o trabalho",
+    title: "Conduza com clareza",
     description:
-      "Adicione clientes, projetos, prazos e responsáveis por cada etapa.",
+      "Transforme prioridades, responsáveis e próximos passos em um caminho que todos conseguem acompanhar.",
   },
   {
     number: "03",
-    title: "Acompanhe e entregue",
+    title: "Entregue com confiança",
     description:
-      "Monitore o andamento e compartilhe os arquivos com segurança.",
+      "Apresente arquivos, versões e aprovações em uma experiência que aumenta o valor percebido do seu trabalho.",
   },
 ];
 
@@ -128,7 +102,7 @@ export default function Home() {
               href="#recursos"
               className="transition-colors hover:text-primary"
             >
-              Recursos
+              Experiência
             </a>
 
             <a
@@ -151,7 +125,7 @@ export default function Home() {
               href="/login"
               className="border border-primary bg-primary px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-primary-dark"
             >
-              Criar conta
+              Começar agora
             </a>
           </div>
         </nav>
@@ -163,7 +137,7 @@ export default function Home() {
         <div className="mx-auto grid max-w-[1440px] grid-cols-2 md:grid-cols-4">
           {statistics.map((statistic, index) => (
             <div
-              key={statistic.label}
+              key={statistic.value}
               className={`px-5 py-8 md:px-10 md:py-10 ${
                 index !== statistics.length - 1
                   ? "border-r border-white/25"
@@ -172,7 +146,7 @@ export default function Home() {
                 index < 2 ? "max-md:border-b max-md:border-white/25" : ""
               }`}
             >
-              <p className="text-3xl font-semibold tracking-[-0.05em] text-white md:text-4xl">
+              <p className="text-2xl font-semibold tracking-[-0.05em] text-white md:text-3xl lg:text-4xl">
                 {statistic.value}
               </p>
 
@@ -184,65 +158,24 @@ export default function Home() {
         </div>
       </section>
 
-      <section id="recursos" className="border-b border-ink/20">
-        <div className="mx-auto max-w-[1440px]">
-          <div className="grid border-b border-ink/20 lg:grid-cols-[0.4fr_0.6fr]">
-            <div className="px-5 py-16 md:px-10 md:py-24 lg:border-r lg:border-ink/20">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-                01 / Estrutura
-              </p>
-            </div>
-
-            <div className="px-5 pb-16 md:px-10 md:pb-24 lg:py-24">
-              <h2 className="max-w-4xl text-4xl font-semibold leading-[1.02] tracking-[-0.055em] md:text-6xl">
-                A estrutura do seu negócio em uma única plataforma.
-              </h2>
-            </div>
-          </div>
-
-          <div className="grid md:grid-cols-2">
-            {capabilities.map((capability, index) => (
-              <article
-                key={capability.number}
-                className={`min-h-72 border-ink/20 p-5 transition-colors duration-300 hover:bg-primary hover:text-white md:p-10 ${
-                  index % 2 === 0 ? "md:border-r" : ""
-                } ${index < 2 ? "border-b" : ""}`}
-              >
-                <span className="font-mono text-xs text-primary transition-colors group-hover:text-white">
-                  {capability.number}
-                </span>
-
-                <div className="mt-20 grid gap-4 xl:grid-cols-[0.85fr_1.15fr]">
-                  <h3 className="text-2xl font-semibold tracking-[-0.035em]">
-                    {capability.title}
-                  </h3>
-
-                  <p className="max-w-md leading-7 text-muted transition-colors hover:text-white/75">
-                    {capability.description}
-                  </p>
-                </div>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
+      <CapabilitiesShowcase />
 
       <section className="border-b border-white/25 bg-primary text-white">
         <div className="mx-auto max-w-[1440px] px-5 py-20 md:px-10 md:py-28">
           <div className="flex flex-col gap-8 border-b border-white/25 pb-8 md:flex-row md:items-end md:justify-between">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/75">
-                Visão geral
+                Movimento real
               </p>
 
-              <h2 className="mt-5 text-4xl font-semibold tracking-[-0.05em] text-white md:text-5xl">
-                Projetos recentes
+              <h2 className="mt-5 max-w-2xl text-4xl font-semibold tracking-[-0.05em] text-white md:text-5xl">
+                Crescimento que você consegue enxergar.
               </h2>
             </div>
 
-            <p className="max-w-sm leading-7 text-white/75">
-              Informações importantes visíveis sem excesso de telas ou
-              distrações.
+            <p className="max-w-md leading-7 text-white/75">
+              Cada projeto deixa de ser apenas uma demanda e passa a fazer
+              parte de uma operação preparada para ir mais longe.
             </p>
           </div>
 
@@ -289,12 +222,17 @@ export default function Home() {
         <div className="mx-auto grid max-w-[1440px] lg:grid-cols-[0.4fr_0.6fr]">
           <div className="px-5 py-16 md:px-10 md:py-24 lg:border-r lg:border-ink/20">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-              02 / Processo
+              02 / Caminho
             </p>
 
-            <h2 className="mt-6 max-w-sm text-4xl font-semibold leading-tight tracking-[-0.05em]">
-              Comece sem complicação.
+            <h2 className="mt-6 max-w-md text-4xl font-semibold leading-tight tracking-[-0.05em]">
+              Do primeiro contato à próxima conquista.
             </h2>
+
+            <p className="mt-7 max-w-sm leading-7 text-muted">
+              Uma estrutura simples para transformar intenção em progresso e
+              progresso em confiança.
+            </p>
           </div>
 
           <div>
@@ -324,25 +262,25 @@ export default function Home() {
         <div className="mx-auto grid max-w-[1440px] lg:grid-cols-[1fr_auto]">
           <div className="px-5 py-20 md:px-10 md:py-28 lg:border-r lg:border-white/25">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/60">
-              Organize o próximo projeto
+              O próximo nível começa agora
             </p>
 
             <h2 className="mt-7 max-w-4xl text-4xl font-semibold leading-[0.98] tracking-[-0.06em] md:text-7xl">
-              Uma operação profissional começa com clareza.
+              Sua empresa já tem potencial. Dê a ela uma operação à altura.
             </h2>
           </div>
 
           <div className="flex min-w-80 flex-col justify-between border-t border-white/25 p-6 lg:border-t-0 lg:p-10">
             <p className="max-w-xs leading-7 text-white/70">
-              Crie sua conta e transforme a maneira como você administra
-              clientes e projetos.
+              Crie uma experiência que seus clientes reconhecem, sua equipe
+              entende e seu crescimento consegue sustentar.
             </p>
 
             <a
               href="/login"
               className="mt-14 flex min-h-14 items-center justify-between border border-ink bg-ink px-6 font-medium text-white transition-colors duration-200 hover:border-white hover:bg-white hover:text-primary"
             >
-              Criar conta gratuita
+              Começar a transformar
               <span aria-hidden="true">↗</span>
             </a>
           </div>
