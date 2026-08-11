@@ -11,8 +11,13 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
-  opacity: 0.25;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='.08'/%3E%3C/svg%3E");
+  opacity: 0.18;
+  background-image: radial-gradient(
+    circle,
+    rgba(32, 36, 29, 0.2) 0.55px,
+    transparent 0.7px
+  );
+  background-size: 5px 5px;
 }
 
 .light {
@@ -22,8 +27,12 @@
   width: 650px;
   height: 650px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.92);
-  filter: blur(120px);
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.92) 0%,
+    rgba(255, 255, 255, 0.52) 42%,
+    rgba(255, 255, 255, 0) 72%
+  );
   pointer-events: none;
 }
 
@@ -175,8 +184,7 @@
   width: 100%;
   max-width: 900px;
   height: 650px;
-  transform-style: preserve-3d;
-  will-change: transform;
+  backface-visibility: hidden;
 }
 
 .sceneGroup {
@@ -200,7 +208,6 @@
   stroke: #536044;
   stroke-linecap: round;
   stroke-width: 3;
-  filter: drop-shadow(0 5px 4px rgba(32, 36, 29, 0.16));
 }
 
 .cardsColumn {
@@ -217,15 +224,12 @@
   width: 255px;
   border: 1px solid rgba(32, 36, 29, 0.18);
   border-radius: 4px;
-  background: rgba(247, 246, 240, 0.94);
+  background: rgba(247, 246, 240, 0.98);
   padding: 14px;
   box-shadow: 0 18px 36px rgba(32, 36, 29, 0.14);
-  backdrop-filter: blur(14px);
-  transform-style: preserve-3d;
   transition:
     border-color 300ms ease,
     box-shadow 300ms ease;
-  will-change: transform;
 }
 
 .communicationCard:hover {
@@ -397,11 +401,9 @@
   border-radius: 6px;
   background: #f2f3ee;
   box-shadow:
-    -10px 42px 70px rgba(32, 36, 29, 0.28),
+    -8px 30px 48px rgba(32, 36, 29, 0.24),
     25px 25px 0 #536044;
   transform-origin: center;
-  transform-style: preserve-3d;
-  will-change: transform;
 }
 
 .dashboardTopbar {
@@ -583,7 +585,7 @@
   padding: 12px 15px;
   box-shadow: 0 15px 30px rgba(32, 36, 29, 0.18);
   color: #8e463a;
-  transform: rotate(-5deg) translateZ(45px);
+  transform: rotate(-5deg);
 }
 
 .deadlineNote span {
@@ -615,7 +617,6 @@
   background: #f2f3ee;
   padding: 12px;
   box-shadow: 0 18px 35px rgba(32, 36, 29, 0.2);
-  transform: translateZ(60px);
 }
 
 .approvedToast > span {

@@ -2,11 +2,10 @@
 
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useRef } from "react";
 import styles from "./HumanHero.module.css";
 
-gsap.registerPlugin(useGSAP, ScrollTrigger);
+gsap.registerPlugin(useGSAP);
 
 const communicationCards = [
   {
@@ -49,8 +48,9 @@ export function HumanHero() {
       const section = sectionRef.current;
       const scene = sceneRef.current;
       const dashboard = dashboardRef.current;
+      const light = section?.querySelector<HTMLElement>(`.${styles.light}`);
 
-      if (!section || !scene || !dashboard) return;
+      if (!section || !scene || !dashboard || !light) return;
 
       const reduceMotion = window.matchMedia(
         "(prefers-reduced-motion: reduce)",
@@ -86,6 +86,18 @@ export function HumanHero() {
         strokeDashoffset: 500,
       });
 
+      if (reduceMotion) {
+        gsap.set(cards, { opacity: 1, y: 0, scale: 1 });
+        gsap.set(dashboard, {
+          opacity: 1,
+          x: 0,
+          rotationY: 0,
+          scale: 1,
+        });
+        gsap.set(cables, { strokeDashoffset: 0 });
+        return;
+      }
+
       const entrance = gsap.timeline({
         defaults: {
           ease: "power4.out",
@@ -96,34 +108,34 @@ export function HumanHero() {
         .from(`.${styles.kicker}`, {
           opacity: 0,
           y: 18,
-          duration: 0.7,
+          duration: 0.42,
         })
         .from(
           `.${styles.titleLineInner}`,
           {
             yPercent: 115,
-            duration: 1.15,
-            stagger: 0.1,
+            duration: 0.72,
+            stagger: 0.06,
           },
-          "-=0.35",
+          "-=0.22",
         )
         .from(
           `.${styles.description}`,
           {
             opacity: 0,
             y: 24,
-            duration: 0.75,
+            duration: 0.45,
           },
-          "-=0.65",
+          "-=0.4",
         )
         .from(
           `.${styles.actions}`,
           {
             opacity: 0,
             y: 20,
-            duration: 0.65,
+            duration: 0.4,
           },
-          "-=0.55",
+          "-=0.32",
         )
         .to(
           dashboard,
@@ -132,9 +144,9 @@ export function HumanHero() {
             x: 0,
             rotationY: -3,
             scale: 1,
-            duration: 1.25,
+            duration: 0.72,
           },
-          "-=0.85",
+          "-=0.54",
         )
         .to(
           cards,
@@ -142,106 +154,82 @@ export function HumanHero() {
             opacity: 1,
             y: 0,
             scale: 1,
-            duration: 0.75,
-            stagger: 0.09,
+            duration: 0.46,
+            stagger: 0.055,
           },
-          "-=0.8",
+          "-=0.5",
         )
         .to(
           cables,
           {
             strokeDashoffset: 0,
-            duration: 1.2,
-            stagger: 0.08,
+            duration: 0.68,
+            stagger: 0.045,
           },
-          "-=0.85",
+          "-=0.52",
         );
 
-      if (!reduceMotion) {
-        gsap.to(`.${styles.sceneGroup}`, {
-          yPercent: -6,
-          ease: "none",
-          scrollTrigger: {
-            trigger: section,
-            start: "top top",
-            end: "bottom top",
-            scrub: 1,
-          },
-        });
-
-        gsap.to(cards, {
-          y: (index) => (index % 2 === 0 ? -22 : 18),
-          ease: "none",
-          scrollTrigger: {
-            trigger: section,
-            start: "top top",
-            end: "bottom top",
-            scrub: 1.2,
-          },
-        });
-      }
-
-      if (!finePointer || reduceMotion) return;
+      if (!finePointer) return;
 
       const moveSceneX = gsap.quickTo(scene, "rotationY", {
-        duration: 1.1,
+        duration: 0.45,
         ease: "power3.out",
       });
 
       const moveSceneY = gsap.quickTo(scene, "rotationX", {
-        duration: 1.1,
+        duration: 0.45,
         ease: "power3.out",
       });
 
+      const moveLightX = gsap.quickTo(light, "xPercent", {
+        duration: 0.55,
+        ease: "power3.out",
+      });
+
+      const moveLightY = gsap.quickTo(light, "yPercent", {
+        duration: 0.55,
+        ease: "power3.out",
+      });
+
+      let pointerFrame = 0;
+      let pointerX = 0;
+      let pointerY = 0;
+
       const handlePointerMove = (event: PointerEvent) => {
-        const bounds = section.getBoundingClientRect();
-        const x = (event.clientX - bounds.left) / bounds.width - 0.5;
-        const y = (event.clientY - bounds.top) / bounds.height - 0.5;
+        pointerX = event.clientX;
+        pointerY = event.clientY;
 
-        moveSceneX(x * 4);
-        moveSceneY(y * -4);
+        if (pointerFrame) return;
 
-        cards.forEach((card, index) => {
-          const depth = Number(card.dataset.depth ?? 1);
+        pointerFrame = window.requestAnimationFrame(() => {
+          pointerFrame = 0;
+          const bounds = section.getBoundingClientRect();
+          const x = (pointerX - bounds.left) / bounds.width - 0.5;
+          const y = (pointerY - bounds.top) / bounds.height - 0.5;
 
-          gsap.to(card, {
-            x: x * depth * (18 + index * 3),
-            y: y * depth * (14 + index * 2),
-            rotationY: x * depth * 5,
-            rotationX: y * depth * -5,
-            duration: 0.9,
-            ease: "power3.out",
-            overwrite: "auto",
-          });
-        });
-
-        gsap.to(`.${styles.light}`, {
-          xPercent: x * 24,
-          yPercent: y * 24,
-          duration: 1.3,
-          ease: "power3.out",
-          overwrite: "auto",
+          moveSceneX(x * 2.4);
+          moveSceneY(y * -2.4);
+          moveLightX(x * 10);
+          moveLightY(y * 10);
         });
       };
 
       const handlePointerLeave = () => {
+        window.cancelAnimationFrame(pointerFrame);
+        pointerFrame = 0;
         moveSceneX(0);
         moveSceneY(0);
-
-        gsap.to(cards, {
-          x: 0,
-          y: 0,
-          rotationX: 0,
-          rotationY: 0,
-          duration: 1,
-          ease: "power3.out",
-        });
+        moveLightX(0);
+        moveLightY(0);
       };
 
-      section.addEventListener("pointermove", handlePointerMove);
+      section.addEventListener("pointermove", handlePointerMove, {
+        passive: true,
+      });
       section.addEventListener("pointerleave", handlePointerLeave);
 
       return () => {
+        window.cancelAnimationFrame(pointerFrame);
         section.removeEventListener("pointermove", handlePointerMove);
         section.removeEventListener("pointerleave", handlePointerLeave);
       };
@@ -310,22 +298,10 @@ export function HumanHero() {
                 preserveAspectRatio="none"
                 aria-hidden="true"
               >
-                <path
-                  data-cable
-                  d="M260 115 C390 115, 355 205, 500 205"
-                />
-                <path
-                  data-cable
-                  d="M280 245 C390 245, 390 280, 500 280"
-                />
-                <path
-                  data-cable
-                  d="M245 375 C365 375, 400 355, 500 355"
-                />
-                <path
-                  data-cable
-                  d="M300 515 C410 515, 410 430, 500 430"
-                />
+                <path data-cable d="M260 115 C390 115, 355 205, 500 205" />
+                <path data-cable d="M280 245 C390 245, 390 280, 500 280" />
+                <path data-cable d="M245 375 C365 375, 400 355, 500 355" />
+                <path data-cable d="M300 515 C410 515, 410 430, 500 430" />
               </svg>
 
               <div className={styles.cardsColumn}>
