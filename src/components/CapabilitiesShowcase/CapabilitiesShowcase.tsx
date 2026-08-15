@@ -506,7 +506,7 @@ export function CapabilitiesShowcase() {
 
         <div ref={stageRef} className={styles.cinematicStage} data-chapter="1">
           <div className={styles.mediaDeck} aria-hidden="true">
-            {storyMedia.map((mediaItem, index) => (
+            {storyMedia.map((mediaItem) => (
               <div
                 key={mediaItem.src}
                 className={styles.mediaLayer}

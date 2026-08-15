@@ -12,13 +12,17 @@ export async function createClient() {
         getAll() {
           return cookieStore.getAll();
         },
+
         setAll(cookiesToSet) {
           try {
             cookiesToSet.forEach(({ name, value, options }) => {
               cookieStore.set(name, value, options);
             });
           } catch {
-            // Em Server Components, a atualização será tratada pelo proxy.
+            /*
+             * Server Components não conseguem modificar cookies.
+             * A atualização da sessão será feita pelo proxy.
+             */
           }
         },
       },
