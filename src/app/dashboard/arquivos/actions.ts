@@ -80,8 +80,7 @@ async function getAuthenticatedContext() {
       supabase,
       user,
       organizationId: null,
-      error:
-        "Não foi possível identificar sua organização.",
+      error: "Não foi possível identificar sua organização.",
     };
   }
 
@@ -96,9 +95,7 @@ async function getAuthenticatedContext() {
 export async function prepareAttachmentUploadAction(
   input: PrepareAttachmentInput,
 ): Promise<AttachmentActionResult> {
-  const conversationId =
-    input.conversationId.trim();
-
+  const conversationId = input.conversationId.trim();
   const fileName = input.fileName.trim();
   const mimeType = input.mimeType.trim();
   const fileSize = Number(input.fileSize);
@@ -106,8 +103,7 @@ export async function prepareAttachmentUploadAction(
   if (!conversationId) {
     return {
       status: "error",
-      message:
-        "Selecione uma conversa para vincular o arquivo.",
+      message: "Selecione uma conversa para vincular o arquivo.",
     };
   }
 
@@ -125,21 +121,18 @@ export async function prepareAttachmentUploadAction(
   ) {
     return {
       status: "error",
-      message:
-        "O arquivo deve possuir no máximo 20 MB.",
+      message: "O arquivo deve possuir no máximo 20 MB.",
     };
   }
 
   if (!allowedMimeTypes.has(mimeType)) {
     return {
       status: "error",
-      message:
-        "Este tipo de arquivo não é permitido.",
+      message: "Este tipo de arquivo não é permitido.",
     };
   }
 
-  const context =
-    await getAuthenticatedContext();
+  const context = await getAuthenticatedContext();
 
   if (
     context.error ||
@@ -161,10 +154,7 @@ export async function prepareAttachmentUploadAction(
     .from("requests")
     .select("id, client_id")
     .eq("id", conversationId)
-    .eq(
-      "organization_id",
-      context.organizationId,
-    )
+    .eq("organization_id", context.organizationId)
     .maybeSingle();
 
   if (conversationError || !conversation) {
@@ -175,8 +165,7 @@ export async function prepareAttachmentUploadAction(
     };
   }
 
-  const safeFileName =
-    sanitizeFileName(fileName);
+  const safeFileName = sanitizeFileName(fileName);
 
   const storagePath = [
     context.organizationId,
@@ -191,8 +180,7 @@ export async function prepareAttachmentUploadAction(
   } = await context.supabase
     .from("attachments")
     .insert({
-      organization_id:
-        context.organizationId,
+      organization_id: context.organizationId,
       client_id: conversation.client_id,
       request_id: conversation.id,
       message_id: null,
@@ -235,8 +223,7 @@ export async function prepareAttachmentUploadAction(
 export async function completeAttachmentUploadAction(
   attachmentId: string,
 ): Promise<AttachmentActionResult> {
-  const context =
-    await getAuthenticatedContext();
+  const context = await getAuthenticatedContext();
 
   if (
     context.error ||
@@ -256,14 +243,9 @@ export async function completeAttachmentUploadAction(
     error: attachmentError,
   } = await context.supabase
     .from("attachments")
-    .select(
-      "id, storage_bucket, storage_path",
-    )
+    .select("id, storage_bucket, storage_path")
     .eq("id", attachmentId)
-    .eq(
-      "organization_id",
-      context.organizationId,
-    )
+    .eq("organization_id", context.organizationId)
     .maybeSingle();
 
   if (attachmentError || !attachment) {
@@ -305,13 +287,9 @@ export async function completeAttachmentUploadAction(
 export async function cancelAttachmentUploadAction(
   attachmentId: string,
 ): Promise<void> {
-  const context =
-    await getAuthenticatedContext();
+  const context = await getAuthenticatedContext();
 
-  if (
-    context.error ||
-    !context.organizationId
-  ) {
+  if (context.error || !context.organizationId) {
     return;
   }
 
@@ -320,14 +298,9 @@ export async function cancelAttachmentUploadAction(
     error: attachmentError,
   } = await context.supabase
     .from("attachments")
-    .select(
-      "id, storage_bucket, storage_path",
-    )
+    .select("id, storage_bucket, storage_path")
     .eq("id", attachmentId)
-    .eq(
-      "organization_id",
-      context.organizationId,
-    )
+    .eq("organization_id", context.organizationId)
     .maybeSingle();
 
   if (attachmentError || !attachment) {
@@ -342,8 +315,123 @@ export async function cancelAttachmentUploadAction(
     .from("attachments")
     .delete()
     .eq("id", attachment.id)
-    .eq(
-      "organization_id",
-      context.organizationId,
+    .eq("organization_id", context.organizationId);
+}
+
+export async function deleteAttachmentAction(
+  attachmentId: string,
+): Promise<AttachmentActionResult> {
+  const normalizedAttachmentId = attachmentId.trim();
+
+  if (!normalizedAttachmentId) {
+    return {
+      status: "error",
+      message: "O arquivo informado é inválido.",
+    };
+  }
+
+  const context = await getAuthenticatedContext();
+
+  if (
+    context.error ||
+    !context.user ||
+    !context.organizationId
+  ) {
+    return {
+      status: "error",
+      message:
+        context.error ??
+        "Não foi possível autenticar a exclusão.",
+    };
+  }
+
+  const {
+    data: attachment,
+    error: attachmentError,
+  } = await context.supabase
+    .from("attachments")
+    .select(
+      `
+        id,
+        request_id,
+        storage_bucket,
+        storage_path
+      `,
+    )
+    .eq("id", normalizedAttachmentId)
+    .eq("organization_id", context.organizationId)
+    .maybeSingle();
+
+  if (attachmentError) {
+    console.error(
+      "Erro ao consultar arquivo para exclusão:",
+      attachmentError,
     );
+
+    return {
+      status: "error",
+      message:
+        "Não foi possível consultar o arquivo selecionado.",
+    };
+  }
+
+  if (!attachment) {
+    return {
+      status: "error",
+      message:
+        "O arquivo não existe ou você não possui acesso.",
+    };
+  }
+
+  const { error: storageError } =
+    await context.supabase.storage
+      .from(attachment.storage_bucket)
+      .remove([attachment.storage_path]);
+
+  if (storageError) {
+    console.error(
+      "Erro ao excluir objeto do armazenamento:",
+      storageError,
+    );
+
+    return {
+      status: "error",
+      message:
+        "Não foi possível remover o arquivo do armazenamento.",
+    };
+  }
+
+  const {
+    data: deletedAttachment,
+    error: deleteError,
+  } = await context.supabase
+    .from("attachments")
+    .delete()
+    .eq("id", attachment.id)
+    .eq("organization_id", context.organizationId)
+    .select("id")
+    .maybeSingle();
+
+  if (deleteError || !deletedAttachment) {
+    console.error(
+      "Erro ao excluir metadados do arquivo:",
+      deleteError,
+    );
+
+    return {
+      status: "error",
+      message:
+        "O arquivo foi removido do armazenamento, mas não foi possível finalizar a exclusão do registro.",
+    };
+  }
+
+  revalidatePath("/dashboard/arquivos");
+  revalidatePath(
+    `/dashboard/conversas/${attachment.request_id}`,
+  );
+
+  return {
+    status: "success",
+    message: "Arquivo excluído com sucesso.",
+  };
 }
