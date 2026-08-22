@@ -39,8 +39,8 @@ export default async function PortalLayout({
   return (
     <div className="min-h-screen bg-[#e8e9e3] text-[#1f231b]">
       <header className="border-b border-[#1f231b]/20 bg-[#f7f6f0]">
-        <div className="mx-auto flex min-h-20 max-w-7xl flex-wrap items-center justify-between gap-5 px-5 py-4 md:px-10">
-          <div className="flex items-center gap-10">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-5 px-5 py-4 md:px-10">
+          <div className="flex min-h-12 flex-wrap items-center gap-6 lg:gap-10">
             <Link
               href="/portal"
               className="flex items-center gap-3"
@@ -53,9 +53,28 @@ export default async function PortalLayout({
               </strong>
             </Link>
 
-            <span className="hidden border-l border-[#1f231b]/20 pl-10 font-mono text-[9px] uppercase tracking-[0.18em] text-[#566547] sm:block">
+            <span className="hidden border-l border-[#1f231b]/20 pl-10 font-mono text-[9px] uppercase tracking-[0.18em] text-[#566547] lg:block">
               PORTAL DO CLIENTE
             </span>
+
+            <nav
+              className="flex min-h-10 border border-[#1f231b]/15"
+              aria-label="Navegação do portal"
+            >
+              <Link
+                href="/portal"
+                className="flex items-center border-r border-[#1f231b]/15 px-4 text-xs text-[#62675d] transition hover:bg-[#566547] hover:text-white"
+              >
+                Entregas
+              </Link>
+
+              <Link
+                href="/portal/conversas"
+                className="flex items-center px-4 text-xs text-[#62675d] transition hover:bg-[#566547] hover:text-white"
+              >
+                Conversas
+              </Link>
+            </nav>
           </div>
 
           <div className="flex items-center gap-4">
@@ -79,12 +98,11 @@ export default async function PortalLayout({
 
       <footer className="border-t border-[#1f231b]/20 bg-[#f7f6f0]">
         <div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-7 text-xs text-[#62675d] sm:flex-row sm:items-center sm:justify-between md:px-10">
-          <span>
-            ALINORA © 2026
-          </span>
+          <span>ALINORA © 2026</span>
 
           <span>
-            Acesso protegido e isolado por cliente.
+            Acesso protegido e isolado por
+            cliente.
           </span>
         </div>
       </footer>
