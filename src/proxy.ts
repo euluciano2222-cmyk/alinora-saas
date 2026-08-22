@@ -10,5 +10,7 @@ export const config = {
   matcher: [
     "/login/:path*",
     "/dashboard/:path*",
+    "/portal/:path*",
+    "/convite/:path*",
   ],
 };
