@@ -1,47 +1,73 @@
 import type { EmailOtpType } from "@supabase/supabase-js";
-import { NextResponse, type NextRequest } from "next/server";
+import {
+  NextResponse,
+  type NextRequest,
+} from "next/server";
 
+import { getSafeInternalPath } from "@/lib/security/redirects";
 import { createClient } from "@/lib/supabase/server";
 
-function getSafeNextPath(value: string | null) {
+const allowedOtpTypes = new Set([
+  "signup",
+  "invite",
+  "magiclink",
+  "recovery",
+  "email_change",
+  "email",
+]);
+
+function getSafeOtpType(
+  value: string | null,
+): EmailOtpType | null {
   if (
     !value ||
-    !value.startsWith("/") ||
-    value.startsWith("//")
+    !allowedOtpTypes.has(value)
   ) {
-    return "/dashboard";
+    return null;
   }
 
-  return value;
+  return value as EmailOtpType;
 }
 
-export async function GET(request: NextRequest) {
+export async function GET(
+  request: NextRequest,
+) {
   const requestUrl = new URL(request.url);
 
-  const code = requestUrl.searchParams.get("code");
-  const tokenHash = requestUrl.searchParams.get("token_hash");
-  const type = requestUrl.searchParams.get(
-    "type",
-  ) as EmailOtpType | null;
+  const code =
+    requestUrl.searchParams.get("code");
 
-  const nextPath = getSafeNextPath(
+  const tokenHash =
+    requestUrl.searchParams.get(
+      "token_hash",
+    );
+
+  const type = getSafeOtpType(
+    requestUrl.searchParams.get("type"),
+  );
+
+  const nextPath = getSafeInternalPath(
     requestUrl.searchParams.get("next"),
   );
 
   const supabase = await createClient();
 
-  let confirmationError = null;
+  let confirmationError: Error | null =
+    null;
 
   if (code) {
     const { error } =
-      await supabase.auth.exchangeCodeForSession(code);
+      await supabase.auth.exchangeCodeForSession(
+        code,
+      );
 
     confirmationError = error;
   } else if (tokenHash && type) {
-    const { error } = await supabase.auth.verifyOtp({
-      type,
-      token_hash: tokenHash,
-    });
+    const { error } =
+      await supabase.auth.verifyOtp({
+        type,
+        token_hash: tokenHash,
+      });
 
     confirmationError = error;
   } else {
@@ -51,12 +77,20 @@ export async function GET(request: NextRequest) {
   }
 
   if (!confirmationError) {
+    const destinationUrl = new URL(
+      nextPath,
+      requestUrl.origin,
+    );
+
     return NextResponse.redirect(
-      new URL(nextPath, requestUrl.origin),
+      destinationUrl,
     );
   }
 
-  const loginUrl = new URL("/login", requestUrl.origin);
+  const loginUrl = new URL(
+    "/login",
+    requestUrl.origin,
+  );
 
   loginUrl.searchParams.set(
     "confirmation",

@@ -4,46 +4,61 @@ import {
   type NextRequest,
 } from "next/server";
 
+import { getSafeInternalPath } from "@/lib/security/redirects";
+
 function copyCookies(
   source: NextResponse,
   destination: NextResponse,
 ): NextResponse {
-  source.cookies.getAll().forEach((cookie) => {
-    destination.cookies.set(cookie);
-  });
+  source.cookies
+    .getAll()
+    .forEach((cookie) => {
+      destination.cookies.set(cookie);
+    });
 
   return destination;
 }
 
-function getSafeNextPath(value: string | null) {
-  if (
-    !value ||
-    !value.startsWith("/") ||
-    value.startsWith("//")
-  ) {
-    return "/dashboard";
-  }
-
-  return value;
+function matchesRoutePrefix(
+  pathname: string,
+  prefix: string,
+) {
+  return (
+    pathname === prefix ||
+    pathname.startsWith(`${prefix}/`)
+  );
 }
 
-function isProtectedPath(pathname: string) {
+function isProtectedPath(
+  pathname: string,
+) {
   return (
-    pathname.startsWith("/dashboard") ||
-    pathname.startsWith("/portal") ||
-    pathname.startsWith("/convite")
+    matchesRoutePrefix(
+      pathname,
+      "/dashboard",
+    ) ||
+    matchesRoutePrefix(
+      pathname,
+      "/portal",
+    ) ||
+    matchesRoutePrefix(
+      pathname,
+      "/convite",
+    )
   );
 }
 
 export async function updateSession(
   request: NextRequest,
 ) {
-  let supabaseResponse = NextResponse.next({
-    request,
-  });
+  let supabaseResponse =
+    NextResponse.next({
+      request,
+    });
 
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env
+      .NEXT_PUBLIC_SUPABASE_URL!,
     process.env
       .NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
     {
@@ -52,19 +67,30 @@ export async function updateSession(
           return request.cookies.getAll();
         },
 
-        setAll(cookiesToSet, headers) {
+        setAll(
+          cookiesToSet,
+          responseHeaders,
+        ) {
           cookiesToSet.forEach(
             ({ name, value }) => {
-              request.cookies.set(name, value);
+              request.cookies.set(
+                name,
+                value,
+              );
             },
           );
 
-          supabaseResponse = NextResponse.next({
-            request,
-          });
+          supabaseResponse =
+            NextResponse.next({
+              request,
+            });
 
           cookiesToSet.forEach(
-            ({ name, value, options }) => {
+            ({
+              name,
+              value,
+              options,
+            }) => {
               supabaseResponse.cookies.set(
                 name,
                 value,
@@ -73,30 +99,38 @@ export async function updateSession(
             },
           );
 
-          Object.entries(headers).forEach(
-            ([name, value]) => {
-              supabaseResponse.headers.set(
-                name,
-                value,
-              );
-            },
-          );
+          Object.entries(
+            responseHeaders,
+          ).forEach(([name, value]) => {
+            supabaseResponse.headers.set(
+              name,
+              value,
+            );
+          });
         },
       },
     },
   );
 
-  const { data } =
+  const { data, error } =
     await supabase.auth.getClaims();
 
-  const claims = data?.claims;
-  const pathname = request.nextUrl.pathname;
+  const claims =
+    error ? null : data?.claims;
 
-  if (!claims && isProtectedPath(pathname)) {
-    const loginUrl = request.nextUrl.clone();
+  const pathname =
+    request.nextUrl.pathname;
+
+  if (
+    !claims &&
+    isProtectedPath(pathname)
+  ) {
+    const loginUrl =
+      request.nextUrl.clone();
 
     loginUrl.pathname = "/login";
     loginUrl.search = "";
+
     loginUrl.searchParams.set(
       "next",
       `${pathname}${request.nextUrl.search}`,
@@ -108,20 +142,30 @@ export async function updateSession(
     );
   }
 
-  if (claims && pathname.startsWith("/login")) {
-    const nextPath = getSafeNextPath(
-      request.nextUrl.searchParams.get("next"),
+  if (
+    claims &&
+    matchesRoutePrefix(
+      pathname,
+      "/login",
+    )
+  ) {
+    const nextPath =
+      getSafeInternalPath(
+        request.nextUrl.searchParams.get(
+          "next",
+        ),
+      );
+
+    const destinationUrl = new URL(
+      nextPath,
+      request.nextUrl.origin,
     );
-
-    const destinationUrl =
-      request.nextUrl.clone();
-
-    destinationUrl.pathname = nextPath;
-    destinationUrl.search = "";
 
     return copyCookies(
       supabaseResponse,
-      NextResponse.redirect(destinationUrl),
+      NextResponse.redirect(
+        destinationUrl,
+      ),
     );
   }
 

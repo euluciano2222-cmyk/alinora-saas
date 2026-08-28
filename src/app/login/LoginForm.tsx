@@ -13,6 +13,9 @@ const initialAuthState: AuthState = {
   message: "",
 };
 
+const strongPasswordPattern =
+  "(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{12,128}";
+
 type AuthMode = "sign-in" | "sign-up";
 
 type LoginFormProps = {
@@ -116,6 +119,8 @@ function AuthModeForm({
               autoComplete="name"
               placeholder="Como devemos chamar você?"
               defaultValue={state.fields?.fullName}
+              minLength={2}
+              maxLength={120}
               disabled={pending}
               required
             />
@@ -131,8 +136,11 @@ function AuthModeForm({
             type="email"
             inputMode="email"
             autoComplete="email"
+            autoCapitalize="none"
+            spellCheck={false}
             placeholder="voce@empresa.com"
             defaultValue={state.fields?.email}
+            maxLength={320}
             disabled={pending}
             required
           />
@@ -144,7 +152,7 @@ function AuthModeForm({
 
             {!isSignUp && (
               <span className={styles.passwordHint}>
-                Recuperação em breve
+                Acesso protegido
               </span>
             )}
           </div>
@@ -161,10 +169,26 @@ function AuthModeForm({
               }
               placeholder={
                 isSignUp
-                  ? "Mínimo de 8 caracteres"
+                  ? "Crie uma senha forte"
                   : "Digite sua senha"
               }
-              minLength={8}
+              minLength={isSignUp ? 12 : 8}
+              maxLength={128}
+              pattern={
+                isSignUp
+                  ? strongPasswordPattern
+                  : undefined
+              }
+              title={
+                isSignUp
+                  ? "Use de 12 a 128 caracteres, incluindo letra maiúscula, letra minúscula, número e símbolo."
+                  : undefined
+              }
+              aria-describedby={
+                isSignUp
+                  ? "passwordRequirements"
+                  : undefined
+              }
               disabled={pending}
               required
             />
@@ -178,11 +202,23 @@ function AuthModeForm({
                   : "Mostrar senha"
               }
               aria-pressed={showPassword}
-              onClick={() => setShowPassword((current) => !current)}
+              onClick={() =>
+                setShowPassword((current) => !current)
+              }
             >
               <EyeIcon visible={showPassword} />
             </button>
           </div>
+
+          {isSignUp && (
+            <span
+              id="passwordRequirements"
+              className={styles.passwordHint}
+            >
+              Use de 12 a 128 caracteres, com letra maiúscula,
+              minúscula, número e símbolo.
+            </span>
+          )}
         </div>
 
         {state.message && (

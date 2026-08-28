@@ -14,6 +14,13 @@ const initialActionState: DeliveryActionState = {
   message: "",
 };
 
+const uuidPattern =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function isValidUuid(value: string) {
+  return uuidPattern.test(value);
+}
+
 async function getAuthenticatedContext() {
   const supabase = await createClient();
 
@@ -27,7 +34,8 @@ async function getAuthenticatedContext() {
       supabase,
       user: null,
       organizationId: null,
-      error: "Sua sessão expirou. Entre novamente.",
+      error:
+        "Sua sessão expirou. Entre novamente.",
     };
   }
 
@@ -54,16 +62,19 @@ async function getAuthenticatedContext() {
   return {
     supabase,
     user,
-    organizationId: membership.organization_id,
+    organizationId:
+      membership.organization_id,
     error: null,
   };
 }
 
 export async function createDeliveryAction(
-  _previousState: DeliveryActionState =
+  previousState: DeliveryActionState =
     initialActionState,
   formData: FormData,
 ): Promise<DeliveryActionState> {
+  void previousState;
+
   const conversationId = String(
     formData.get("conversationId") ?? "",
   ).trim();
@@ -72,23 +83,30 @@ export async function createDeliveryAction(
     formData.get("message") ?? "",
   ).trim();
 
-  if (!conversationId) {
+  if (
+    !conversationId ||
+    !isValidUuid(conversationId)
+  ) {
     return {
       status: "error",
       message:
-        "Selecione uma conversa para criar a entrega.",
+        "Selecione uma conversa válida para criar a entrega.",
     };
   }
 
-  if (message.length > 5000) {
+  if (
+    message.length > 5000 ||
+    message.includes("\u0000")
+  ) {
     return {
       status: "error",
       message:
-        "A mensagem deve possuir no máximo 5.000 caracteres.",
+        "A mensagem deve ser válida e possuir no máximo 5.000 caracteres.",
     };
   }
 
-  const context = await getAuthenticatedContext();
+  const context =
+    await getAuthenticatedContext();
 
   if (
     context.error ||
@@ -110,7 +128,10 @@ export async function createDeliveryAction(
     .from("requests")
     .select("id, client_id, title")
     .eq("id", conversationId)
-    .eq("organization_id", context.organizationId)
+    .eq(
+      "organization_id",
+      context.organizationId,
+    )
     .maybeSingle();
 
   if (conversationError) {
@@ -143,8 +164,14 @@ export async function createDeliveryAction(
       count: "exact",
       head: true,
     })
-    .eq("request_id", conversation.id)
-    .eq("organization_id", context.organizationId)
+    .eq(
+      "request_id",
+      conversation.id,
+    )
+    .eq(
+      "organization_id",
+      context.organizationId,
+    )
     .eq("is_internal", false);
 
   if (attachmentError) {
@@ -174,8 +201,14 @@ export async function createDeliveryAction(
   } = await context.supabase
     .from("approvals")
     .select("id")
-    .eq("request_id", conversation.id)
-    .eq("organization_id", context.organizationId)
+    .eq(
+      "request_id",
+      conversation.id,
+    )
+    .eq(
+      "organization_id",
+      context.organizationId,
+    )
     .eq("status", "pending")
     .limit(1)
     .maybeSingle();
@@ -207,10 +240,14 @@ export async function createDeliveryAction(
   } = await context.supabase
     .from("approvals")
     .insert({
-      organization_id: context.organizationId,
-      client_id: conversation.client_id,
-      request_id: conversation.id,
-      requested_by: context.user.id,
+      organization_id:
+        context.organizationId,
+      client_id:
+        conversation.client_id,
+      request_id:
+        conversation.id,
+      requested_by:
+        context.user.id,
       message: message || null,
       status: "pending",
     })
@@ -223,7 +260,9 @@ export async function createDeliveryAction(
       approvalError,
     );
 
-    if (approvalError?.code === "23505") {
+    if (
+      approvalError?.code === "23505"
+    ) {
       return {
         status: "error",
         message:
@@ -238,7 +277,10 @@ export async function createDeliveryAction(
     };
   }
 
-  revalidatePath("/dashboard/entregas");
+  revalidatePath(
+    "/dashboard/entregas",
+  );
+
   revalidatePath(
     `/dashboard/conversas/${conversation.id}`,
   );
@@ -253,16 +295,22 @@ export async function createDeliveryAction(
 export async function cancelDeliveryAction(
   approvalId: string,
 ): Promise<DeliveryActionState> {
-  const normalizedApprovalId = approvalId.trim();
+  const normalizedApprovalId =
+    approvalId.trim();
 
-  if (!normalizedApprovalId) {
+  if (
+    !normalizedApprovalId ||
+    !isValidUuid(normalizedApprovalId)
+  ) {
     return {
       status: "error",
-      message: "A entrega informada é inválida.",
+      message:
+        "A entrega informada é inválida.",
     };
   }
 
-  const context = await getAuthenticatedContext();
+  const context =
+    await getAuthenticatedContext();
 
   if (
     context.error ||
@@ -282,9 +330,14 @@ export async function cancelDeliveryAction(
     error: approvalError,
   } = await context.supabase
     .from("approvals")
-    .select("id, request_id, status")
+    .select(
+      "id, request_id, status",
+    )
     .eq("id", normalizedApprovalId)
-    .eq("organization_id", context.organizationId)
+    .eq(
+      "organization_id",
+      context.organizationId,
+    )
     .maybeSingle();
 
   if (approvalError) {
@@ -308,7 +361,9 @@ export async function cancelDeliveryAction(
     };
   }
 
-  if (approval.status !== "pending") {
+  if (
+    approval.status !== "pending"
+  ) {
     return {
       status: "error",
       message:
@@ -325,12 +380,18 @@ export async function cancelDeliveryAction(
       status: "cancelled",
     })
     .eq("id", approval.id)
-    .eq("organization_id", context.organizationId)
+    .eq(
+      "organization_id",
+      context.organizationId,
+    )
     .eq("status", "pending")
     .select("id")
     .maybeSingle();
 
-  if (updateError || !updatedApproval) {
+  if (
+    updateError ||
+    !updatedApproval
+  ) {
     console.error(
       "Erro ao cancelar entrega:",
       updateError,
@@ -343,13 +404,17 @@ export async function cancelDeliveryAction(
     };
   }
 
-  revalidatePath("/dashboard/entregas");
+  revalidatePath(
+    "/dashboard/entregas",
+  );
+
   revalidatePath(
     `/dashboard/conversas/${approval.request_id}`,
   );
 
   return {
     status: "success",
-    message: "Entrega cancelada com sucesso.",
+    message:
+      "Entrega cancelada com sucesso.",
   };
 }
