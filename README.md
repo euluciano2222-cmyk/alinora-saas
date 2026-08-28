@@ -4,6 +4,8 @@ Uma plataforma SaaS conceitual para centralizar conversas, arquivos, entregas e 
 
 [Visualizar projeto](https://alinora-saas.vercel.app) · [Repositório](https://github.com/euluciano2222-cmyk/alinora-saas)
 
+![Prévia da landing page da Alinora](./public/readme/landing.png)
+
 ## Sobre o projeto
 
 A Alinora foi criada para resolver um problema comum em projetos de prestação de serviços: informações importantes espalhadas entre mensagens, arquivos e diferentes canais de comunicação.
