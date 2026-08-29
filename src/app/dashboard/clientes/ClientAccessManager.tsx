@@ -2,7 +2,6 @@
 
 import {
   useActionState,
-  useEffect,
   useState,
 } from "react";
 
@@ -114,6 +113,7 @@ function RevokeAccessButton({
               ? "alert"
               : "status"
           }
+          aria-live="polite"
         >
           {state.message}
         </p>
@@ -135,23 +135,18 @@ export default function ClientAccessManager({
       initialState,
     );
 
-  const [origin, setOrigin] = useState("");
   const [copiedId, setCopiedId] =
     useState<string | null>(null);
-
-  useEffect(() => {
-    setOrigin(window.location.origin);
-  }, []);
 
   async function copyInviteLink(
     accessId: string,
   ) {
-    const invitePath = `/convite/${accessId}`;
-    const inviteUrl = origin
-      ? `${origin}${invitePath}`
-      : invitePath;
-
     try {
+      const inviteUrl = new URL(
+        `/convite/${encodeURIComponent(accessId)}`,
+        window.location.origin,
+      ).toString();
+
       await navigator.clipboard.writeText(
         inviteUrl,
       );
@@ -180,6 +175,7 @@ export default function ClientAccessManager({
     <details className="w-full border border-ink/20 bg-[#f7f6f0] lg:w-[360px]">
       <summary className="flex min-h-10 cursor-pointer list-none items-center justify-between gap-4 px-4 text-xs text-primary transition hover:bg-primary hover:text-white">
         <span>Portal do cliente</span>
+
         <span
           className="font-mono text-[9px]"
           aria-hidden="true"
@@ -298,11 +294,15 @@ export default function ClientAccessManager({
                 id={`access-email-${clientId}`}
                 name="email"
                 type="email"
+                inputMode="email"
                 autoComplete="email"
+                autoCapitalize="none"
+                spellCheck={false}
                 defaultValue={
                   defaultEmail ?? ""
                 }
                 placeholder="cliente@empresa.com"
+                maxLength={320}
                 required
                 disabled={pending}
                 className="mt-2 min-h-11 w-full border border-ink/20 bg-transparent px-3 text-xs outline-none transition focus:border-primary disabled:opacity-50"
@@ -363,6 +363,7 @@ export default function ClientAccessManager({
                     ? "alert"
                     : "status"
                 }
+                aria-live="polite"
               >
                 {state.message}
               </div>

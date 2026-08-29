@@ -1,9 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
+import { getSafeInternalPath } from "@/lib/security/redirects";
 import { createClient } from "@/lib/supabase/server";
 
 export type AuthState = {
@@ -15,18 +15,80 @@ export type AuthState = {
   };
 };
 
+const minimumSignInPasswordLength = 8;
+const minimumSignUpPasswordLength = 12;
+const maximumPasswordLength = 128;
+const maximumEmailLength = 320;
+const maximumFullNameLength = 120;
 
-
-function sanitizeNextPath(value: FormDataEntryValue | null) {
+function isValidEmail(email: string) {
   if (
-    typeof value !== "string" ||
-    !value.startsWith("/") ||
-    value.startsWith("//")
+    !email ||
+    email.length > maximumEmailLength ||
+    /[\u0000-\u001F\u007F]/.test(email)
   ) {
-    return "/dashboard";
+    return false;
   }
 
-  return value;
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function isStrongPassword(password: string) {
+  return (
+    password.length >= minimumSignUpPasswordLength &&
+    password.length <= maximumPasswordLength &&
+    /[a-z]/.test(password) &&
+    /[A-Z]/.test(password) &&
+    /[0-9]/.test(password) &&
+    /[^A-Za-z0-9\s]/.test(password)
+  );
+}
+
+function getTrustedSiteOrigin() {
+  const configuredSiteUrl =
+    process.env.NEXT_PUBLIC_SITE_URL?.trim();
+
+  const vercelProductionUrl =
+    process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim();
+
+  const candidates = [
+    configuredSiteUrl,
+    vercelProductionUrl
+      ? `https://${vercelProductionUrl}`
+      : null,
+    process.env.NODE_ENV === "production"
+      ? "https://alinora-saas.vercel.app"
+      : "http://localhost:3000",
+  ];
+
+  for (const candidate of candidates) {
+    if (!candidate) {
+      continue;
+    }
+
+    try {
+      const url = new URL(candidate);
+
+      const isSecureUrl =
+        url.protocol === "https:";
+
+      const isLocalDevelopment =
+        process.env.NODE_ENV !== "production" &&
+        url.protocol === "http:" &&
+        (url.hostname === "localhost" ||
+          url.hostname === "127.0.0.1");
+
+      if (isSecureUrl || isLocalDevelopment) {
+        return url.origin;
+      }
+    } catch {
+      continue;
+    }
+  }
+
+  return process.env.NODE_ENV === "production"
+    ? "https://alinora-saas.vercel.app"
+    : "http://localhost:3000";
 }
 
 function translateAuthError(code?: string) {
@@ -39,13 +101,14 @@ function translateAuthError(code?: string) {
 
     case "user_already_exists":
     case "email_exists":
-      return "Já existe uma conta cadastrada com este e-mail.";
+      return "Não foi possível criar esta conta. Verifique os dados informados ou tente entrar.";
 
     case "weak_password":
-      return "Crie uma senha mais segura, com pelo menos 8 caracteres.";
+      return "Use uma senha de 12 a 128 caracteres, com letra maiúscula, letra minúscula, número e símbolo.";
 
     case "over_email_send_rate_limit":
-      return "Muitas tentativas em pouco tempo. Aguarde alguns minutos.";
+    case "over_request_rate_limit":
+      return "Muitas tentativas em pouco tempo. Aguarde alguns minutos antes de tentar novamente.";
 
     case "signup_disabled":
       return "A criação de novas contas está temporariamente indisponível.";
@@ -63,7 +126,13 @@ export async function authenticate(
   const emailValue = formData.get("email");
   const passwordValue = formData.get("password");
   const fullNameValue = formData.get("fullName");
-  const nextPath = sanitizeNextPath(formData.get("next"));
+  const nextValue = formData.get("next");
+
+  const nextPath = getSafeInternalPath(
+    typeof nextValue === "string"
+      ? nextValue
+      : null,
+  );
 
   const email =
     typeof emailValue === "string"
@@ -77,7 +146,10 @@ export async function authenticate(
 
   const fullName =
     typeof fullNameValue === "string"
-      ? fullNameValue.trim()
+      ? fullNameValue
+          .normalize("NFC")
+          .trim()
+          .replace(/\s+/g, " ")
       : "";
 
   const fields = {
@@ -85,7 +157,10 @@ export async function authenticate(
     fullName,
   };
 
-  if (intent !== "sign-in" && intent !== "sign-up") {
+  if (
+    intent !== "sign-in" &&
+    intent !== "sign-up"
+  ) {
     return {
       status: "error",
       message: "Ação de autenticação inválida.",
@@ -93,7 +168,7 @@ export async function authenticate(
     };
   }
 
-  if (!email || !email.includes("@")) {
+  if (!isValidEmail(email)) {
     return {
       status: "error",
       message: "Informe um endereço de e-mail válido.",
@@ -101,18 +176,48 @@ export async function authenticate(
     };
   }
 
-  if (password.length < 8) {
+  if (
+    intent === "sign-in" &&
+    (
+      password.length <
+        minimumSignInPasswordLength ||
+      password.length >
+        maximumPasswordLength
+    )
+  ) {
     return {
       status: "error",
-      message: "A senha precisa ter pelo menos 8 caracteres.",
+      message:
+        "A senha precisa ter entre 8 e 128 caracteres.",
       fields,
     };
   }
 
-  if (intent === "sign-up" && fullName.length < 2) {
+  if (
+    intent === "sign-up" &&
+    !isStrongPassword(password)
+  ) {
     return {
       status: "error",
-      message: "Informe seu nome para criar a conta.",
+      message:
+        "Use uma senha de 12 a 128 caracteres, com letra maiúscula, letra minúscula, número e símbolo.",
+      fields,
+    };
+  }
+
+  if (
+    intent === "sign-up" &&
+    (
+      fullName.length < 2 ||
+      fullName.length >
+        maximumFullNameLength ||
+      /[\u0000-\u001F\u007F]/.test(fullName)
+    )
+  ) {
+    return {
+      status: "error",
+      message:
+        "Informe um nome válido entre 2 e 120 caracteres.",
       fields,
     };
   }
@@ -120,15 +225,18 @@ export async function authenticate(
   const supabase = await createClient();
 
   if (intent === "sign-in") {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const { error } =
+      await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
     if (error) {
       return {
         status: "error",
-        message: translateAuthError(error.code),
+        message: translateAuthError(
+          error.code,
+        ),
         fields,
       };
     }
@@ -137,38 +245,46 @@ export async function authenticate(
     redirect(nextPath);
   }
 
-  const requestHeaders = await headers();
-  const origin =
-    requestHeaders.get("origin") ??
-    process.env.NEXT_PUBLIC_SITE_URL ??
-    "http://localhost:3000";
+  const confirmUrl = new URL(
+    "/auth/confirm",
+    getTrustedSiteOrigin(),
+  );
 
-  const confirmUrl = new URL("/auth/confirm", origin);
-  confirmUrl.searchParams.set("next", nextPath);
+  confirmUrl.searchParams.set(
+    "next",
+    nextPath,
+  );
 
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      emailRedirectTo: confirmUrl.toString(),
-      data: {
-        full_name: fullName,
+  const { data, error } =
+    await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo:
+          confirmUrl.toString(),
+        data: {
+          full_name: fullName,
+        },
       },
-    },
-  });
+    });
 
   if (error) {
     return {
       status: "error",
-      message: translateAuthError(error.code),
+      message: translateAuthError(
+        error.code,
+      ),
       fields,
     };
   }
 
-  if (data.user?.identities?.length === 0) {
+  if (
+    data.user?.identities?.length === 0
+  ) {
     return {
-      status: "error",
-      message: "Já existe uma conta cadastrada com este e-mail.",
+      status: "success",
+      message:
+        "Se o endereço informado estiver disponível, você receberá as instruções de confirmação por e-mail.",
       fields,
     };
   }
